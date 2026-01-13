@@ -35,7 +35,18 @@ app.post('/register-call', async (req, res) => {
     const payload = {
       agent_id: process.env.ELEVENLABS_AGENT_ID,
       agent_phone_number_id: process.env.ELEVENLABS_PHONE_NUMBER_ID,
-      to_number: to_number
+      to_number: to_number,
+      conversation_initiation_client_data: {
+        conversation_config_override: {
+          agent: {
+            prompt: {
+              prompt: "Tu es Sophie, assistante SAV pour un cuisiniste. Tu appelles les clients 7 jours après l'installation de leur cuisine."
+            },
+            language: "fr",
+            first_message: "Bonjour, je suis Sophie du service après-vente de votre cuisiniste. Je vous appelle pour m'assurer que tout se passe bien avec votre nouvelle cuisine. C'est le bon moment pour échanger deux minutes ?"
+          }
+        }
+      }
     };
 
     const response = await fetch(elevenLabsUrl, {
