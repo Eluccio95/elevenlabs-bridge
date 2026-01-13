@@ -34,12 +34,17 @@ app.post('/register-call', async (req, res) => {
 
     console.log(`[${new Date().toISOString()}] Registering call from ${from_number} to ${to_number} (SAV #${sav_id})`);
 
-    const result = await elevenlabs.conversationalAi.twilio.registerCall({
+    // Utilisation correcte de l'API ElevenLabs Conversational AI
+    const result = await elevenlabs.conversationalAi.registerConversation({
       agent_id: process.env.ELEVENLABS_AGENT_ID,
-      twilio_account_sid: process.env.TWILIO_ACCOUNT_SID,
-      twilio_auth_token: process.env.TWILIO_AUTH_TOKEN,
-      from_number: from_number,
-      to_number: to_number,
+      conversation_config_override: {
+        twilio: {
+          account_sid: process.env.TWILIO_ACCOUNT_SID,
+          auth_token: process.env.TWILIO_AUTH_TOKEN,
+          from_number: from_number,
+          to_number: to_number
+        }
+      },
       metadata: {
         sav_id: sav_id?.toString() || 'unknown'
       }
@@ -49,7 +54,7 @@ app.post('/register-call', async (req, res) => {
 
     res.json({
       success: true,
-      call_sid: result.call_sid || 'unknown',
+      conversation_id: result.conversation_id || 'unknown',
       result: result
     });
 
@@ -57,7 +62,8 @@ app.post('/register-call', async (req, res) => {
     console.error(`[${new Date().toISOString()}] Error:`, error);
     res.status(500).json({
       error: 'Failed to register call',
-      message: error.message
+      message: error.message,
+      details: error.response?.data || error.toString()
     });
   }
 });
