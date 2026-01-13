@@ -1,15 +1,10 @@
 import express from 'express';
-import { ElevenLabsClient } from 'elevenlabs';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
 const app = express();
 app.use(express.json());
-
-const elevenlabs = new ElevenLabsClient({
-  apiKey: process.env.ELEVENLABS_API_KEY
-});
 
 // Health check
 app.get('/health', (req, res) => {
@@ -34,21 +29,36 @@ app.post('/register-call', async (req, res) => {
 
     console.log(`[${new Date().toISOString()}] Registering call from ${from_number} to ${to_number} (SAV #${sav_id})`);
 
-    // Utilisation correcte de l'API ElevenLabs Conversational AI
-    const result = await elevenlabs.conversationalAi.registerConversation({
-      agent_id: process.env.ELEVENLABS_AGENT_ID,
-      conversation_config_override: {
-        twilio: {
-          account_sid: process.env.TWILIO_ACCOUNT_SID,
-          auth_token: process.env.TWILIO_AUTH_TOKEN,
-          from_number: from_number,
-          to_number: to_number
-        }
-      },
-      metadata: {
-        sav_id: sav_id?.toString() || 'unknown'
+    // Appel direct à l'API ElevenLabs pour déclencher un appel via agent
+    const elevenLabsUrl = `https://api.elevenlabs.io/v1/convai/conversation?agent_id=${process.env.ELEVENLABS_AGENT_ID}`;
+    
+    const payload = {
+      twilio_config: {
+        account_sid: process.env.TWILIO_ACCOUNT_SID,
+        auth_token: process.env.TWILIO_AUTH_TOKEN,
+        from_number: from_number,
+        to_number: to_number
       }
+    };
+
+    const response = await fetch(elevenLabsUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'xi-api-key': process.env.ELEVENLABS_API_KEY
+      },
+      body: JSON.stringify(payload)
     });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      console.error(`[${new Date().toISOString()}] ElevenLabs API Error:`, result);
+      return res.status(response.status).json({
+        error: 'ElevenLabs API error',
+        details: result
+      });
+    }
 
     console.log(`[${new Date().toISOString()}] Call registered successfully:`, result);
 
@@ -62,8 +72,7 @@ app.post('/register-call', async (req, res) => {
     console.error(`[${new Date().toISOString()}] Error:`, error);
     res.status(500).json({
       error: 'Failed to register call',
-      message: error.message,
-      details: error.response?.data || error.toString()
+      message: error.message
     });
   }
 });
