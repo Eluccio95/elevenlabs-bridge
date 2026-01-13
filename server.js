@@ -11,7 +11,7 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// Endpoint principal
+// Endpoint principal - Appel sortant via ElevenLabs
 app.post('/register-call', async (req, res) => {
   try {
     const authHeader = req.headers.authorization;
@@ -19,26 +19,23 @@ app.post('/register-call', async (req, res) => {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    const { from_number, to_number, sav_id } = req.body;
+    const { to_number, sav_id } = req.body;
 
-    if (!from_number || !to_number) {
+    if (!to_number) {
       return res.status(400).json({ 
-        error: 'Missing required fields: from_number, to_number' 
+        error: 'Missing required field: to_number' 
       });
     }
 
-    console.log(`[${new Date().toISOString()}] Registering call from ${from_number} to ${to_number} (SAV #${sav_id})`);
+    console.log(`[${new Date().toISOString()}] Initiating outbound call to ${to_number} (SAV #${sav_id})`);
 
-    // Appel direct à l'API ElevenLabs pour déclencher un appel via agent
-    const elevenLabsUrl = `https://api.elevenlabs.io/v1/convai/conversation?agent_id=${process.env.ELEVENLABS_AGENT_ID}`;
+    // Appel à l'API ElevenLabs pour déclencher un appel sortant
+    const elevenLabsUrl = 'https://api.elevenlabs.io/v1/convai/twilio/outbound-call';
     
     const payload = {
-      twilio_config: {
-        account_sid: process.env.TWILIO_ACCOUNT_SID,
-        auth_token: process.env.TWILIO_AUTH_TOKEN,
-        from_number: from_number,
-        to_number: to_number
-      }
+      agent_id: process.env.ELEVENLABS_AGENT_ID,
+      agent_phone_number_id: process.env.ELEVENLABS_PHONE_NUMBER_ID,
+      to_number: to_number
     };
 
     const response = await fetch(elevenLabsUrl, {
@@ -60,10 +57,11 @@ app.post('/register-call', async (req, res) => {
       });
     }
 
-    console.log(`[${new Date().toISOString()}] Call registered successfully:`, result);
+    console.log(`[${new Date().toISOString()}] Outbound call initiated successfully:`, result);
 
     res.json({
       success: true,
+      call_sid: result.callSid || 'unknown',
       conversation_id: result.conversation_id || 'unknown',
       result: result
     });
@@ -71,7 +69,7 @@ app.post('/register-call', async (req, res) => {
   } catch (error) {
     console.error(`[${new Date().toISOString()}] Error:`, error);
     res.status(500).json({
-      error: 'Failed to register call',
+      error: 'Failed to initiate call',
       message: error.message
     });
   }
@@ -80,5 +78,5 @@ app.post('/register-call', async (req, res) => {
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`✅ ElevenLabs Bridge running on port ${PORT}`);
-  console.log(`📞 Ready to register calls for agent ${process.env.ELEVENLABS_AGENT_ID}`);
+  console.log(`📞 Ready to make outbound calls with agent ${process.env.ELEVENLABS_AGENT_ID}`);
 });
