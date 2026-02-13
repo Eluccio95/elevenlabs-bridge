@@ -35,7 +35,8 @@ app.post('/register-call', async (req, res) => {
     const payload = {
       agent_id: process.env.ELEVENLABS_AGENT_ID,
       agent_phone_number_id: process.env.ELEVENLABS_PHONE_NUMBER_ID,
-      to_number: to_number,
+      to_number: to_number
+      };
 
     const response = await fetch(elevenLabsUrl, {
       method: 'POST',
