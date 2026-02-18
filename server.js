@@ -18,7 +18,7 @@ app.post('/register-call', async (req, res) => {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    const { to_number, sav_id, type_intervention } = req.body;
+   const { to_number, sav_id } = req.body;
     
     if (!to_number) {
       return res.status(400).json({ 
@@ -26,30 +26,14 @@ app.post('/register-call', async (req, res) => {
       });
     }
 
-    const typeInterv = type_intervention || 'sav';
-    
-    console.log(`[${new Date().toISOString()}] Initiating outbound call to ${to_number} (SAV #${sav_id}, type: ${typeInterv})`);
-
-    // Message personnalisé selon le type d'intervention
-    const firstMessage = typeInterv === 'pose'
-      ? "Bonjour, je suis Sofia de SAV Pilot. Je vous appelle pour avoir votre retour sur l'installation de votre nouvelle cuisine. Êtes-vous satisfait du résultat ?"
-      : "Bonjour, je suis Sofia de SAV Pilot. Je vous appelle pour faire un point sur l'intervention de réparation effectuée aujourd'hui. Êtes-vous satisfait du travail réalisé ?";
-
     // Appel à l'API ElevenLabs pour déclencher un appel sortant
     const elevenLabsUrl = 'https://api.elevenlabs.io/v1/convai/twilio/outbound-call';
     
-    const payload = {
+   const payload = {
       agent_id: process.env.ELEVENLABS_AGENT_ID,
       agent_phone_number_id: process.env.ELEVENLABS_PHONE_NUMBER_ID,
-      to_number: to_number,
-      conversation_initiation_client_data: {
-        conversation_config_override: {
-          agent: {
-            first_message: firstMessage
-          }
-        }
-      }
-    };
+      to_number: to_number
+};
 
     const response = await fetch(elevenLabsUrl, {
       method: 'POST',
