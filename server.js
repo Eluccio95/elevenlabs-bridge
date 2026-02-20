@@ -39,7 +39,8 @@ if (dynamic_variables) {
           dynamic_variables: dynamic_variables
       };
 }
-
+    
+    console.log(`[${new Date().toISOString()}] Payload envoyé:`, JSON.stringify(payload));
     const response = await fetch(elevenLabsUrl, {
       method: 'POST',
       headers: {
