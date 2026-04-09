@@ -30,7 +30,7 @@ app.post('/register-call', async (req, res) => {
     const elevenLabsUrl = 'https://api.elevenlabs.io/v1/convai/twilio/outbound-call';
     
 const payload = {
-      agent_id: process.env.ELEVENLABS_AGENT_ID,
+      agent_id: req.body.agent_id || process.env.ELEVENLABS_AGENT_ID,
       agent_phone_number_id: process.env.ELEVENLABS_PHONE_NUMBER_ID,
       to_number: to_number
 };
@@ -85,3 +85,4 @@ app.listen(PORT, () => {
   console.log(`✅ ElevenLabs Bridge running on port ${PORT}`);
   console.log(`📞 Ready to make outbound calls with agent ${process.env.ELEVENLABS_AGENT_ID}`);
 });
+-
