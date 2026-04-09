@@ -85,4 +85,3 @@ app.listen(PORT, () => {
   console.log(`✅ ElevenLabs Bridge running on port ${PORT}`);
   console.log(`📞 Ready to make outbound calls with agent ${process.env.ELEVENLABS_AGENT_ID}`);
 });
--
