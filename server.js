@@ -34,10 +34,13 @@ const payload = {
       agent_phone_number_id: process.env.ELEVENLABS_PHONE_NUMBER_ID,
       to_number: to_number
 };
-if (dynamic_variables) {
+if (dynamic_variables || req.body.conversation_config_override) {
       payload.conversation_initiation_client_data = {
           dynamic_variables: dynamic_variables
       };
+      if (req.body.conversation_config_override) {
+          payload.conversation_initiation_client_data.conversation_config_override = req.body.conversation_config_override;
+      }
 }
     
     console.log(`[${new Date().toISOString()}] Payload envoyé:`, JSON.stringify(payload));
